@@ -9,6 +9,13 @@
     <h1>this is the index page</h1>
     {% if user.is_authenticated %}
     <h2>You name is: {{ user.username}} </h2>
+    {% for post in posts %}
+        <h2> {{post.postName}} </h2>
+        <h3> {{post.time}} </h3>
+        <p> {{post.description}} </p>
+        <img src="{{post.image.url}}" alt="">
+        <p> {{post.description}} </p>
+    {% endfor %}
     <a href="/accounts/logout/">logout</a>
     {% else %}
     <h2>You are not logged in.</h2>
