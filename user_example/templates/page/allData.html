@@ -1,9 +1,13 @@
 {% extends 'base/baseTemplate.html'  %}
 {% block content %}
  <!-- 404 Error Text -->
- <div class="text-center">
+ <!-- <div class="text-center">
     <div class="error mx-auto" data-text="All">All</div>
     <p class="text-gray-500 mb-0">ข้อมูลทั้งหมด</p>
     <a href="/">&larr; Back to Dashboard</a>
-  </div>
+  </div> -->
+  {% for post in posts %}
+    <h3> {{post.Time}} </h3>
+    <img src="{{post.Image.url}}" alt="">
+  {% endfor %}
 {% endblock %}

@@ -7,6 +7,7 @@ from .forms import UsersLoginForm
 # from PIL import Image
 from django.contrib.auth import authenticate, login
 from .forms import UsersLoginForm
+import os.path, time
 
 @login_required
 def index(request):
@@ -20,12 +21,15 @@ def getData(request):
     if request.method == 'POST':
         print('post', request.POST)
         print('file', request.FILES.get('upload_file'))
-        postName =  str(request.POST['postName'])
-        description = str(request.POST['description'])
-        time = str(request.POST['time'])
+        name =  str(request.POST['name'])
+        datetime = str(request.POST['time'])
+        # print('time',time.strptime(datetime))
         image = request.FILES.get('upload_file')
-        ins = Post(postName = postName, description = description, time = time, image = image)
+        # print('****',name,time,image)
+        ins = Post(Name = name, Time = datetime, Image = image)
         ins.save()
+
+
         print("saveData")
         # im = Image.open(request.FILES.get('upload_file'))
         # im.show()
@@ -33,7 +37,10 @@ def getData(request):
         return HttpResponse("Your response")
 
 def allData(request):
-    return render(request,'page/allData.html')
+    posts = Post.objects.all()
+
+    args = {'posts': posts}
+    return render(request,'page/allData.html', args)
 
 def groupData(request):
     return render(request,'page/groupData.html')
