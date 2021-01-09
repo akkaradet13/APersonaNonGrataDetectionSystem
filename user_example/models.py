@@ -1,11 +1,14 @@
 from django.db import models
+from datetime import datetime
 
 # Create your models here.
 class Post(models.Model):
-    postName = models.CharField(max_length=30)
-    description = models.TextField()
-    time = models.CharField(max_length=30)
-    image = models.ImageField(upload_to='image', blank=True)
+    Name = models.CharField(max_length=50, default='0')
+    DateTime = models.DateTimeField(default='0')
+    Image = models.ImageField(upload_to='image', blank=True, null=True)
 
     def __str__(self):
-        return self.postName
+        return self.Name
+
+
+        # https://www.geeksforgeeks.org/datetimefield-django-models/

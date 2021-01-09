@@ -1,9 +1,106 @@
-{% extends 'base/baseTemplate.html'  %}
+{% extends 'base/baseTemplate.html' %}
 {% block content %}
- <!-- 404 Error Text -->
- <div class="text-center">
+<!-- 404 Error Text -->
+<!-- <div class="text-center">
     <div class="error mx-auto" data-text="All">All</div>
     <p class="text-gray-500 mb-0">ข้อมูลทั้งหมด</p>
     <a href="/">&larr; Back to Dashboard</a>
+  </div> -->
+
+<!-- Begin Page Content -->
+<div class="container-fluid">
+  <!-- Page Heading -->
+  <div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">ข้อมูลทั้งหมด</h1>
+    <!-- <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i
+        class="fas fa-download fa-sm text-white-50"></i> Generate
+      Report</a> -->
   </div>
-{% endblock %}
+  <div class="d-grid gap-3">
+
+    <form class="row gx-3 gy-2 d-flex justify-content-center" action="#" method="GET">
+      <div class="col-sm-3">
+        <div class="input-group">
+          <div class="input-group-text">จาก</div>
+          <input type="datetime-local" class="form-control" id="fromDate" name="fromDate" value="{{fromDate}}">
+        </div>
+      </div>
+      <div class="col-sm-3">
+        <div class="input-group">
+          <div class="input-group-text">ถึง</div>
+          <input type="datetime-local" class="form-control" id="toDate" name="toDate" value="{{toDate}}">
+        </div>
+      </div>
+      <div class="col-sm-2">
+        <button type="submit" class="btn btn-primary">ค้นหา</button>
+      </div>
+    </form>
+
+    <!-- <a href="#" class="pop">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/0/0d/Great_Wave_off_Kanagawa2.jpg"
+      style="width: 400px; height: 264px;">
+  </a>
+
+  <a href="#" class="pop">
+    <img src="http://wallpapercave.com/wp/rZaowP9.jpg" style="width: 400px; height: 264px;">
+  </a> -->
+
+    <div class="modal fade" id="imagemodal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+      aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-body">
+            <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span
+                class="sr-only">Close</span></button>
+            <img src="" class="imagepreview" style="width: 100%;">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <!-- Earnings (Monthly) Card Example -->
+      {% for post in posts %}
+      <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+          <div class="card-body">
+            <div class="row no-gutters align-items-center">
+              <div class="col mr-2">
+                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                  {{post.DateTime|date:"d-m-Y H:i:s"}}
+                </div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">
+                  {{post.Time}}
+                </div>
+              </div>
+              <div class="col-auto">
+                <a href="#" class="pop">
+                  <img src="{{post.Image.url}}" style="width: 80px; height: 80px;">
+                </a>
+                <!-- <img src="{{post.Image.url}}" alt="" width="50px" height="50px"> -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+
+    </div>
+  </div>
+</div>
+
+  <script>
+    $(function () {
+      $('.pop').on('click', function () {
+        $('.imagepreview').attr('src', $(this).find('img').attr('src'));
+        $('#imagemodal').modal('show');
+      });
+    });
+  </script>
+  <!-- {% for post in posts %}
+<h2> {{post.Name}} </h2>
+<h3> {{post.Date}} </h3>
+<h3> {{post.Time}} </h3>
+<img src="{{post.Image.url}}" alt="">
+{% endfor %} -->
+  {% endblock %}

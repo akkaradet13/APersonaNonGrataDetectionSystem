@@ -1,9 +1,43 @@
-{% extends 'base/baseTemplate.html'  %}
+{% extends 'base/baseTemplate.html' %}
 {% block content %}
- <!-- 404 Error Text -->
- <div class="text-center">
+<!-- 404 Error Text -->
+<!-- <div class="text-center">
     <div class="error mx-auto" data-text="Group">Group</div>
     <p class="text-gray-500 mb-0">จัดกลุ่มข้อมูล</p>
     <a href="/">&larr; Back to Dashboard</a>
+  </div> -->
+
+<!-- Begin Page Content -->
+<div class="container-fluid">
+  <!-- Page Heading -->
+  <div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">จัดกลุ่มข้อมูล</h1>
+    <!-- <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i
+        class="fas fa-download fa-sm text-white-50"></i> Generate
+      Report</a> -->
   </div>
-{% endblock %}
+
+  <div class="d-grid gap-3">
+
+    <form class="row gx-3 gy-2 d-flex justify-content-center" action="#">
+      <div class="col-sm-3">
+        <div class="input-group">
+          <div class="input-group-text">จาก</div>
+          <input type="datetime-local" class="form-control" id="specificSizeInputGroupUsername">
+        </div>
+      </div>
+      <div class="col-sm-3">
+        <div class="input-group">
+          <div class="input-group-text">ถึง</div>
+          <input type="datetime-local" class="form-control" id="specificSizeInputGroupUsername">
+        </div>
+      </div>
+      <div class="col-sm-2">
+        <button type="submit" class="btn btn-primary">ค้นหา</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+  {% endblock %}

@@ -26,7 +26,7 @@ SECRET_KEY = '7w8p1^e)sab(0been)3=@@u$vje0iku=d@8yjfv!*f8_ia!j7!'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.1.40', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['192.168.1.40', 'localhost', '127.0.0.1', '192.168.43.120', '192.168.1.38', '10.253.64.24']
 
 
 # Application definition
@@ -76,10 +76,20 @@ WSGI_APPLICATION = 'authenticate.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
+'''
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
+'''
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'djongo',           #'django.db.backends.sqlite3',
+        'NAME': 'APersonaNonGrataData',              # DB name
+        'USER': 'root',               # DB User name <optional>
     }
 }
 
@@ -127,3 +137,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'authenticate/media')
 
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/accounts/login/'
+
+DATETIME_FORMAT = '%m/%d/%Y %H:%M'
+USE_L10N = False
+USE_TZ = False # if you plan to disable timezone support
