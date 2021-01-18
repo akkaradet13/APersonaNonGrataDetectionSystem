@@ -7,6 +7,9 @@ import time
 import cv2
 import numpy as np
 from skin_seg import *
+import os
+
+#! Face Detect
 class Face_Detector():
 	def __init__(self,skin_detect):
 		"skin_detect is an object from skin_seg file"
@@ -84,6 +87,50 @@ class Face_Detector():
 			if cv2.waitKey(1) & 0xFF == ord("q"):
 				break
 		vid.release()
+  
+#! FrontOrganDetect
+# Method to draw boundary around the detected feature
+def draw_boundary(img, classifier, scaleFactor, minNeighbors, color, text):
+    # Converting image to gray-scale
+    gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    # detecting features in gray-scale image, returns coordinates, width and height of features
+    features = classifier.detectMultiScale(gray_img, scaleFactor, minNeighbors)
+    coords = []
+    frontOrganCheck = {'Eyes':0, 'Nose':0, 'Mouth':0}
+    # drawing rectangle around the feature and labeling it
+    for (x, y, w, h) in features:
+        cv2.rectangle(img, (x,y), (x+w, y+h), color, 2)
+        cv2.putText(img, text, (x, y-4), cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 1, cv2.LINE_AA)
+        coords = [x, y, w, h]
+        #? ------------------------- ยังทำไม่ได้
+    if len(coords) <= 0 :
+        print(f'No!!! {text}')
+    else:
+        frontOrganCheck[text] = 1
+        print(f'{text} => {coords}')
+    return frontOrganCheck
+
+# Method to detect the features
+def detect(img, eyeCascade, noseCascade, mouthCascade):
+    color = {"blue":(255,0,0), "red":(0,0,255), "green":(0,255,0), "white":(255,255,255)}
+    coords = draw_boundary(img, eyeCascade, 1.1, 12, color['red'], "Eyes")
+    coords = draw_boundary(img, noseCascade, 1.1, 4, color['green'], "Nose")
+    coords = draw_boundary(img, mouthCascade, 1.1, 20, color['white'], "Mouth")
+    print('+++',coords)
+    return img
+
+
+# Loading classifiers
+faceCascade = cv2.CascadeClassifier('xml/haarcascade_frontalface_default.xml')
+eyesCascade = cv2.CascadeClassifier('xml/haarcascade_eye.xml')
+noseCascade = cv2.CascadeClassifier('xml/Nose.xml')
+mouthCascade = cv2.CascadeClassifier('xml/Mouth.xml')
+
+def checkFileName():
+    entries = os.listdir('./face')
+    return f'img{str(len(entries)+1)}.jpg'
+
+#! Main
 def Arg_Parser():
 	Arg_Par = arg.ArgumentParser()
 	Arg_Par.add_argument("-i", "--image", help = "relative/absolute path of the image file")
@@ -117,11 +164,23 @@ if __name__ == "__main__":
 	if in_arg["image"] != None:
 		img = open_img(in_arg)
 		rects = Face_Detect.Detect_Face_Img(img,size1,size2)
-		print(rects)
+		print('rects',rects)
+		n = 1
+		final_face = None
 		for i,r in enumerate(rects):
 			x,y,w,h = r
-			cv2.rectangle(img, (x, y), (x+w, y+h), (0, 255, 0), 1)
-		cv2.imshow("faces",img)
+			# face = cv2.rectangle(img, (x, y), (x+w, y+h), (0, 255, 0), 1)
+			face_crop = img[y:y+h, x:x+w]
+			final_face = detect(face_crop, eyesCascade, noseCascade, mouthCascade)
+			cv2.imshow(str(n),final_face)
+			n += 1
+			print('---------------')
+			try:
+				cv2.imwrite('face/'+checkFileName(), final_face)
+				print(f'{n}detect')
+			except:
+				print('0')
+		# cv2.imshow("faces",img)
 		if cv2.waitKey(0) & 0xFF == ord("q"):
 			sys.exit(0)
 	if in_arg["video"] != None:

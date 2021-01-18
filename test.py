@@ -1,14 +1,5 @@
-import os
+x = {'e':0,'m':0,'n':0}
 
-def checkFileName():
-    n = 1
-    entries = os.listdir('images')
-    for i in entries:
-        name = f'img{n}.jpg'
-        if name in entries:
-            n += 1
-            print('ok')
-        else:
-            print(name)
-            return name
-checkFileName()
+x['e'] = 1
+
+print(x)
