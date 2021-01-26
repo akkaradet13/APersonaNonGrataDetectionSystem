@@ -34,10 +34,11 @@ class Face_Detector():
         #get the RGB_H_CbCr representation of the image(for more info, please refer to skin_seg.py)
         skin_img = self._skin_detect.RGB_H_CbCr(img,False)
         contours, hierarchy = cv2.findContours(skin_img, cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
-        #cv2	.drawContours(img, contours, -1, (0,255,0), 1)
-        #cv2.imshow("faces",img)
-        #if cv2.waitKey(0) & 0xFF == ord("q"):
-        #	sys.exit(0)
+        cv2	.drawContours(img, contours, -1, (0,255,0), 1)
+        print(f'contours {contours}')
+        cv2.imshow("faces",img)
+        if cv2.waitKey(0) & 0xFF == ord("q"):
+        	sys.exit(0)
         rects = []
         for c in contours:
             # get the bounding rect
@@ -75,6 +76,7 @@ class Face_Detector():
             rects = self.Detect_Face_Img(Image,size1,size2)
             face_crop = None
             final_face = None
+            print(f'len rects = {len(rects)} -> fps{fps}')
             for i,r in enumerate(rects):
                 # Scale back up face locations since the frame we detected in was scaled to 1/10 size
                 x0,y0,w,h = r
@@ -83,18 +85,19 @@ class Face_Detector():
                 w *= scale_factor
                 h *= scale_factor
                 # cv2.rectangle(img, (x0,y0),(x0+w,y0+h),(0,255,0),1)
+                print(f'iiiii{i}')
                 face_crop = img[y0:y0+h, x0:x0+w]
                 font = cv2.FONT_HERSHEY_SIMPLEX
+                final_face = detect(face_crop, eyesCascade, noseCascade, mouthCascade)[0]
+                cv2.imshow(str(i), final_face)
             stop = time.time()
             # f = 30 frame/sec
             # T = 1/30 sec/frame
             # T = 0.032
             #frame = cv2.resize(frame, dim, interpolation =  cv2.INTER_AREA)
-            time.sleep(abs((1/fps - (stop - start))))
-            # cv2.imshow('faces', face_crop)
-            final_face = detect(face_crop, eyesCascade, noseCascade, mouthCascade)
-            cv2.imshow(str(n),final_face)
-            # n += 1
+            frameRate = abs((1/fps - (stop - start)))
+            print(f'fram {frameRate}')
+            time.sleep(frameRate)
             if cv2.waitKey(1) & 0xFF == ord("q"):
                 break
         vid.release()
@@ -127,8 +130,9 @@ def detect(img, eyeCascade, noseCascade, mouthCascade):
     frontOrganCheck = draw_boundary(img, eyeCascade, 1.1, 12, color['red'], "Eyes", frontOrganCheck)
     frontOrganCheck = draw_boundary(img, noseCascade, 1.1, 4, color['green'], "Nose", frontOrganCheck)
     frontOrganCheck = draw_boundary(img, mouthCascade, 1.1, 20, color['white'], "Mouth", frontOrganCheck)
-    print(f'+++++{frontOrganCheck} \n -----{checkOrgan(frontOrganCheck)}')
-    return img
+    organCheck = checkOrgan(frontOrganCheck)
+    print(f'+++++{frontOrganCheck} \n -----{organCheck}')
+    return [img,organCheck]
 
 def checkOrgan(frontOrganCheck):
     data = ''
@@ -176,8 +180,8 @@ if __name__ == "__main__":
         sys.exit(0)
     in_arg = Arg_Parser()
     skin_detect = Skin_Detect()
-    size1 = (40,40)
-    size2 = (300,400)
+    size1 = (20,20)
+    size2 = (150,150)
     scale_factor = 3
     Face_Detect = Face_Detector(skin_detect)
     if in_arg["image"] != None:
