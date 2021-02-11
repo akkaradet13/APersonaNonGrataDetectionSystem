@@ -34,9 +34,9 @@ class FrontOrganDetect():
     def detect(self, img):
         frontOrganCheck = {'coordEyes': None, 'coordNose': None, 'coordMouth': None}
         color = {"blue":(255,0,0), "red":(0,0,255), "green":(0,255,0), "white":(255,255,255)}
-        frontOrganCheck = self.draw_boundary(img, self.eyesCascade, 1.1, 12, color['red'], "Eyes", frontOrganCheck)
-        frontOrganCheck = self.draw_boundary(img, self.noseCascade, 1.1, 4, color['green'], "Nose", frontOrganCheck)
-        frontOrganCheck = self.draw_boundary(img, self.mouthCascade, 1.1, 20, color['white'], "Mouth", frontOrganCheck)
+        frontOrganCheck = self.draw_boundary(img, self.eyesCascade, 1.5, 4, color['red'], "Eyes", frontOrganCheck)
+        frontOrganCheck = self.draw_boundary(img, self.noseCascade, 1.5, 4, color['green'], "Nose", frontOrganCheck)
+        frontOrganCheck = self.draw_boundary(img, self.mouthCascade, 1.5, 2, color['white'], "Mouth", frontOrganCheck)
         # print(f'+++++{frontOrganCheck}')
         return frontOrganCheck
     

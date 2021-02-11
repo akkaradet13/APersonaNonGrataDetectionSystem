@@ -34,6 +34,7 @@ class Face_Detector():
         return rects
     def Detect_Face_Vid(self,vid,size1,size2,scale_factor = 3):	
         n = 0
+        frameCounter = 0
         while True:
             start =time.time()
             (grabbed, img) = vid.read()
@@ -42,28 +43,30 @@ class Face_Detector():
             fps = vid.get(cv2.CAP_PROP_FPS)
             print("\nRecording at {} frame/sec".format(fps))
             Image = cv2.resize(img, (0, 0), fx=1/scale_factor, fy=1/scale_factor)
-            rects = self.Detect_Face_Img(Image,size1,size2)
-            face_crop = None
-            final_face = None
-            print(f'len rects = {len(rects)} -> fps{fps}')
-            for i,r in enumerate(rects):
-                x0,y0,w,h = r
-                x0 *= scale_factor
-                y0 *= scale_factor
-                w *= scale_factor
-                h *= scale_factor
-                face_crop = img[y0:y0+h, x0:x0+w]
-                # font = cv2.FONT_HERSHEY_SIMPLEX
-                cv2.rectangle(img, (x0,y0), (x0+w, y0+h), (0,255,0))
-                final_face = self._organ_detect.detect(face_crop)
-                for item in final_face:
-                    if len(final_face[item]) > 0:
-                        xod,yod,wod,hod = final_face[item]
-                        print(f'rr{xod,yod,wod,hod}')
-                        xx = xod+x0
-                        yy = yod+y0
-                        cv2.rectangle(img, (xx, yy), (xx+wod, yy+hod), (0, 0, 255), 1)
-                        cv2.putText(img, str(item), (xx, yy-4), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255,0,0), 1, cv2.LINE_AA)
+            if frameCounter % 3 > 0:
+                print('-------------------detec-----------------------')  
+                rects = self.Detect_Face_Img(Image,size1,size2)
+                face_crop = None
+                final_face = None
+                print(f'len rects = {len(rects)} -> fps{fps}')
+                for i,r in enumerate(rects):
+                    x0,y0,w,h = r
+                    x0 *= scale_factor
+                    y0 *= scale_factor
+                    w *= scale_factor
+                    h *= scale_factor
+                    face_crop = img[y0:y0+h, x0:x0+w]
+                    # font = cv2.FONT_HERSHEY_SIMPLEX
+                    cv2.rectangle(img, (x0,y0), (x0+w, y0+h), (0,255,0))
+                    final_face = self._organ_detect.detect(face_crop)
+                    for item in final_face:
+                        if len(final_face[item]) > 0:
+                            xod,yod,wod,hod = final_face[item]
+                            print(f'rr{xod,yod,wod,hod}')
+                            xx = xod+x0
+                            yy = yod+y0
+                            cv2.rectangle(img, (xx, yy), (xx+wod, yy+hod), (0, 0, 255), 1)
+                            cv2.putText(img, str(item), (xx, yy-4), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255,0,0), 1, cv2.LINE_AA)
             cv2.imshow('img', img)
             stop = time.time()
             frameRate = abs((1/fps - (stop - start)))
@@ -71,6 +74,9 @@ class Face_Detector():
             time.sleep(frameRate)
             if cv2.waitKey(1) & 0xFF == ord("q"):
                 break
+            print(f'frameCounter => {frameCounter}')
+            frameCounter += 1
+            if frameCounter > 30 : frameCounter = 0
         vid.release()
 
 def checkFileName():
