@@ -35,21 +35,29 @@ class Face_Detector():
     def Detect_Face_Vid(self,vid,size1,size2,scale_factor = 3):	
         n = 0
         frameCounter = 0
+        alpha = 0.2
+        rects2 = []
+        
         while True:
             start =time.time()
             (grabbed, img) = vid.read()
             if not grabbed:
                 break
             fps = vid.get(cv2.CAP_PROP_FPS)
-            print("\nRecording at {} frame/sec".format(fps))
+            
+            # print("\nRecording at {} frame/sec".format(fps))
             Image = cv2.resize(img, (0, 0), fx=1/scale_factor, fy=1/scale_factor)
-            if frameCounter % 3 > 0:
+            
+            
+            if frameCounter % 10 == 0:
                 print('-------------------detec-----------------------')  
                 rects = self.Detect_Face_Img(Image,size1,size2)
                 face_crop = None
                 final_face = None
                 print(f'len rects = {len(rects)} -> fps{fps}')
                 for i,r in enumerate(rects):
+                    overlay = img.copy()
+                    
                     x0,y0,w,h = r
                     x0 *= scale_factor
                     y0 *= scale_factor
@@ -57,7 +65,13 @@ class Face_Detector():
                     h *= scale_factor
                     face_crop = img[y0:y0+h, x0:x0+w]
                     # font = cv2.FONT_HERSHEY_SIMPLEX
-                    cv2.rectangle(img, (x0,y0), (x0+w, y0+h), (0,255,0))
+                    eyeCheck = self._organ_detect.detect(face_crop, 'eye')
+                    print(eyeCheck)
+                    if len(eyeCheck['Eyes']) > 0 :
+                        rects2 = rects
+                        cv2.rectangle(overlay, (x0,y0), (x0+w, y0+h), (0,255,0))
+                        cv2.addWeighted(overlay, alpha, img, 1-alpha,0, img)
+                    '''
                     final_face = self._organ_detect.detect(face_crop)
                     for item in final_face:
                         if len(final_face[item]) > 0:
@@ -67,16 +81,35 @@ class Face_Detector():
                             yy = yod+y0
                             cv2.rectangle(img, (xx, yy), (xx+wod, yy+hod), (0, 0, 255), 1)
                             cv2.putText(img, str(item), (xx, yy-4), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255,0,0), 1, cv2.LINE_AA)
+            '''
+            else:
+                print('-------------------else-------------------', rects2)
+                if len(rects2) > 0:
+                    for i,r in enumerate(rects2):
+                        overlay = img.copy()
+                        
+                        x0,y0,w,h = r
+                        x0 *= scale_factor
+                        y0 *= scale_factor
+                        w *= scale_factor
+                        h *= scale_factor
+                        face_crop = img[y0:y0+h, x0:x0+w]
+                        # font = cv2.FONT_HERSHEY_SIMPLEX
+                        cv2.rectangle(overlay, (x0,y0), (x0+w, y0+h), (0,255,0))
+                        cv2.addWeighted(overlay, alpha, img, 1-alpha,0, img)
+                
             cv2.imshow('img', img)
-            stop = time.time()
-            frameRate = abs((1/fps - (stop - start)))
-            print(f'fram {frameRate}')
-            time.sleep(frameRate)
-            if cv2.waitKey(1) & 0xFF == ord("q"):
-                break
-            print(f'frameCounter => {frameCounter}')
+            # print(f'frameCounter => {frameCounter}')
             frameCounter += 1
             if frameCounter > 30 : frameCounter = 0
+            
+            stop = time.time()
+            frameRate = abs((1/fps - (stop - start)))
+            # print(f'fram {frameRate}')
+            time.sleep(frameRate)
+            
+            if cv2.waitKey(1) & 0xFF == ord("q"):
+                break
         vid.release()
 
 def checkFileName():
@@ -111,10 +144,22 @@ if __name__ == "__main__":
     in_arg = Arg_Parser()
     skin_detect = Skin_Detect()
     frontOrganDetect = FrontOrganDetect()
-    size1 = (20,20)
-    size2 = (150,150)
-    # size1 = (50,50)
-    # size2 = (400,400)
+    
+    #? ต่ำสุด(กว้าง, สูง)
+    #? สูงสุด(กว้าง, สูง)
+    
+    #! 1.5 M
+    # size1 = (20,20)
+    # size2 = (150,150)
+    
+    #! default
+    size1 = (50,50)
+    size2 = (400,400)
+    
+    #! ที่ทำงาน
+    # size1 = (60,60)
+    # size2 = (80,80)
+    
     scale_factor = 3
     Face_Detect = Face_Detector(skin_detect, frontOrganDetect)
     if in_arg["image"] != None:

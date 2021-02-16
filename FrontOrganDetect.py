@@ -22,8 +22,8 @@ class FrontOrganDetect():
             # cv2.rectangle(img, (x,y), (x+w, y+h), color, 2)
             # cv2.putText(img, text, (x, y-4), cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 1, cv2.LINE_AA)
             coords = [x, y, w, h]
-        frontOrganCheck[f'coord{text}'] = coords
-        print(f'+++{text}==>{coords}')
+        frontOrganCheck[text] = coords
+        # print(f'+++{text}==>{coords}')
         # if len(coords) <= 0 :
         #     frontOrganCheck[f'coords{text}'] = 0
         # else:
@@ -31,13 +31,16 @@ class FrontOrganDetect():
         return frontOrganCheck
 
     # Method to detect the features
-    def detect(self, img):
-        frontOrganCheck = {'coordEyes': None, 'coordNose': None, 'coordMouth': None}
+    def detect(self, img, option = 'all'):
         color = {"blue":(255,0,0), "red":(0,0,255), "green":(0,255,0), "white":(255,255,255)}
-        frontOrganCheck = self.draw_boundary(img, self.eyesCascade, 1.5, 4, color['red'], "Eyes", frontOrganCheck)
-        frontOrganCheck = self.draw_boundary(img, self.noseCascade, 1.5, 4, color['green'], "Nose", frontOrganCheck)
-        frontOrganCheck = self.draw_boundary(img, self.mouthCascade, 1.5, 2, color['white'], "Mouth", frontOrganCheck)
-        # print(f'+++++{frontOrganCheck}')
+        frontOrganCheck = {'Eyes': None, 'Nose': None, 'Mouth': None}
+        if option == 'eye':
+            frontOrganCheck = self.draw_boundary(img, self.eyesCascade, 1.5, 4, color['red'], "Eyes", frontOrganCheck)
+        else:
+            frontOrganCheck = self.draw_boundary(img, self.eyesCascade, 1.5, 4, color['red'], "Eyes", frontOrganCheck)
+            frontOrganCheck = self.draw_boundary(img, self.noseCascade, 1.5, 4, color['green'], "Nose", frontOrganCheck)
+            frontOrganCheck = self.draw_boundary(img, self.mouthCascade, 1.5, 2, color['white'], "Mouth", frontOrganCheck)
+            # print(f'+++++{frontOrganCheck}')
         return frontOrganCheck
     
 '''

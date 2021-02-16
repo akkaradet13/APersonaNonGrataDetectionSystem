@@ -2,17 +2,27 @@ import numpy as np
 import cv2
 import os
 
-def checkFileName():
-    n = 1
-    entries = os.listdir()
-    for i in entries:
-        name = f'img{n}.jpg'
-        if name in entries:
-            n += 1
-            print('ok')
-        else:
-            print(name)
-            return name
+def checkFileName(n):
+    name = f'img{n}.jpg'
+    entries = os.listdir('asset/')
+    print(entries, name)
+    if name in entries:
+        n += 1
+        checkFileName(n)
+        print('0')
+    else :
+        # name = f'asset/{name}'
+        print(name)
+        return name
+    
+    # for i in entries:
+    #     name = f'asset/img{n}.jpg'
+    #     if name in entries:
+    #         n += 1
+    #         print('ok')
+    #     else:
+    #         print(name)
+    #         return name
 
 cap = cv2.VideoCapture(0)
 
@@ -26,7 +36,7 @@ while(True):
     # Display the resulting frame
     cv2.imshow('frame',frame)
     if cv2.waitKey(1) & 0xFF == ord('q'):
-        cv2.imwrite(checkFileName(),frame)
+        cv2.imwrite(checkFileName(1),frame)
         break
 
 # When everything done, release the capture
