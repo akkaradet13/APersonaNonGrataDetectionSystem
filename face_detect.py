@@ -36,7 +36,7 @@ class Face_Detector():
         n = 0
         frameCounter = 0
         alpha = 0.2
-        rects2 = []
+        rects2 = None
         
         while True:
             start =time.time()
@@ -55,36 +55,39 @@ class Face_Detector():
                 face_crop = None
                 final_face = None
                 print(f'len rects = {len(rects)} -> fps{fps}')
-                for i,r in enumerate(rects):
-                    overlay = img.copy()
-                    
-                    x0,y0,w,h = r
-                    x0 *= scale_factor
-                    y0 *= scale_factor
-                    w *= scale_factor
-                    h *= scale_factor
-                    face_crop = img[y0:y0+h, x0:x0+w]
-                    # font = cv2.FONT_HERSHEY_SIMPLEX
-                    eyeCheck = self._organ_detect.detect(face_crop, 'eye')
-                    print(eyeCheck)
-                    if len(eyeCheck['Eyes']) > 0 :
-                        rects2 = rects
-                        cv2.rectangle(overlay, (x0,y0), (x0+w, y0+h), (0,255,0))
-                        cv2.addWeighted(overlay, alpha, img, 1-alpha,0, img)
-                    '''
-                    final_face = self._organ_detect.detect(face_crop)
-                    for item in final_face:
-                        if len(final_face[item]) > 0:
-                            xod,yod,wod,hod = final_face[item]
-                            print(f'rr{xod,yod,wod,hod}')
-                            xx = xod+x0
-                            yy = yod+y0
-                            cv2.rectangle(img, (xx, yy), (xx+wod, yy+hod), (0, 0, 255), 1)
-                            cv2.putText(img, str(item), (xx, yy-4), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255,0,0), 1, cv2.LINE_AA)
-            '''
+                if len(rects) == 0 :
+                     rects2 = None
+                else:
+                    for i,r in enumerate(rects):
+                        overlay = img.copy()
+                        
+                        x0,y0,w,h = r
+                        x0 *= scale_factor
+                        y0 *= scale_factor
+                        w *= scale_factor
+                        h *= scale_factor
+                        face_crop = img[y0:y0+h, x0:x0+w]
+                        # font = cv2.FONT_HERSHEY_SIMPLEX
+                        eyeCheck = self._organ_detect.detect(face_crop, 'eye')
+                        print(eyeCheck)
+                        if len(eyeCheck['Eyes']) > 0 :
+                            rects2 = rects
+                            cv2.rectangle(overlay, (x0,y0), (x0+w, y0+h), (0,0,255), 2)
+                            cv2.addWeighted(overlay, alpha, img, 1-alpha,0, img)
+                        '''
+                        final_face = self._organ_detect.detect(face_crop)
+                        for item in final_face:
+                            if len(final_face[item]) > 0:
+                                xod,yod,wod,hod = final_face[item]
+                                print(f'rr{xod,yod,wod,hod}')
+                                xx = xod+x0
+                                yy = yod+y0
+                                cv2.rectangle(img, (xx, yy), (xx+wod, yy+hod), (0, 0, 255), 1)
+                                cv2.putText(img, str(item), (xx, yy-4), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255,0,0), 1, cv2.LINE_AA)
+                '''
             else:
                 print('-------------------else-------------------', rects2)
-                if len(rects2) > 0:
+                if rects2 is not None:
                     for i,r in enumerate(rects2):
                         overlay = img.copy()
                         
@@ -95,13 +98,13 @@ class Face_Detector():
                         h *= scale_factor
                         face_crop = img[y0:y0+h, x0:x0+w]
                         # font = cv2.FONT_HERSHEY_SIMPLEX
-                        cv2.rectangle(overlay, (x0,y0), (x0+w, y0+h), (0,255,0))
+                        cv2.rectangle(overlay, (x0,y0), (x0+w, y0+h), (0,0,255),2)
                         cv2.addWeighted(overlay, alpha, img, 1-alpha,0, img)
                 
             cv2.imshow('img', img)
             # print(f'frameCounter => {frameCounter}')
-            frameCounter += 1
             if frameCounter > 30 : frameCounter = 0
+            frameCounter += 1
             
             stop = time.time()
             frameRate = abs((1/fps - (stop - start)))

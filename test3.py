@@ -5,7 +5,14 @@
 #         print(i)
 # print(n)
 
-x = None
-
-if x == None:
-    print('x')
+# x = None
+# 
+# if x is not None:
+    # print('x')
+# else:
+    # print('y')
+x = 0
+while True:
+    print(f'{x},{x%10}')
+    x += 1
+    if x == 30 : x = 0
