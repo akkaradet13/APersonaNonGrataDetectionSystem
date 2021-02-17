@@ -73,18 +73,18 @@ class Face_Detector():
                         if len(eyeCheck['Eyes']) > 0 :
                             rects2 = rects
                             cv2.rectangle(overlay, (x0,y0), (x0+w, y0+h), (0,0,255), 2)
+                            
+                            final_face = self._organ_detect.detect(face_crop)
+                            for item in final_face:
+                                if len(final_face[item]) > 0:
+                                    xod,yod,wod,hod = final_face[item]
+                                    print(f'rr{xod,yod,wod,hod}')
+                                    xx = xod+x0
+                                    yy = yod+y0
+                                    cv2.rectangle(overlay, (xx, yy), (xx+wod, yy+hod), (0, 0, 255), 1)
+                                    cv2.putText(overlay, str(item), (xx, yy-4), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255,0,0), 1, cv2.LINE_AA)
+                                    
                             cv2.addWeighted(overlay, alpha, img, 1-alpha,0, img)
-                        '''
-                        final_face = self._organ_detect.detect(face_crop)
-                        for item in final_face:
-                            if len(final_face[item]) > 0:
-                                xod,yod,wod,hod = final_face[item]
-                                print(f'rr{xod,yod,wod,hod}')
-                                xx = xod+x0
-                                yy = yod+y0
-                                cv2.rectangle(img, (xx, yy), (xx+wod, yy+hod), (0, 0, 255), 1)
-                                cv2.putText(img, str(item), (xx, yy-4), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255,0,0), 1, cv2.LINE_AA)
-                '''
             else:
                 print('-------------------else-------------------', rects2)
                 if rects2 is not None:
@@ -99,6 +99,16 @@ class Face_Detector():
                         face_crop = img[y0:y0+h, x0:x0+w]
                         # font = cv2.FONT_HERSHEY_SIMPLEX
                         cv2.rectangle(overlay, (x0,y0), (x0+w, y0+h), (0,0,255),2)
+                        print('final face',final_face)
+                        if final_face is not None:
+                            for item in final_face:
+                                if len(final_face[item]) > 0:
+                                    xod,yod,wod,hod = final_face[item]
+                                    print(f'rr{xod,yod,wod,hod}')
+                                    xx = xod+x0
+                                    yy = yod+y0
+                                    cv2.rectangle(overlay, (xx, yy), (xx+wod, yy+hod), (0, 0, 255), 1)
+                                    cv2.putText(overlay, str(item), (xx, yy-4), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255,0,0), 1, cv2.LINE_AA)
                         cv2.addWeighted(overlay, alpha, img, 1-alpha,0, img)
                 
             cv2.imshow('img', img)
@@ -136,8 +146,8 @@ def open_vid(arg_):
     vid_src = "videos/video1.mkv"
     vid = cv2.VideoCapture(arg_["video"])
     return vid
-def open_camera():
-    vid = cv2.VideoCapture(0)
+def open_camera(arg_):
+    vid = cv2.VideoCapture(arg_)
     return vid
 if __name__ == "__main__":
     if len(sys.argv) == 1:
@@ -197,6 +207,6 @@ if __name__ == "__main__":
         vid = open_vid(in_arg)
         Face_Detect.Detect_Face_Vid(vid,size1,size2,scale_factor)
     if in_arg["camera"] != None:
-        cam = open_camera()
+        cam = open_camera(int(in_arg["camera"]))
         Face_Detect.Detect_Face_Vid(cam,size1,size2,scale_factor)
 

@@ -5,24 +5,24 @@ import os
 def checkFileName(n):
     name = f'img{n}.jpg'
     entries = os.listdir('asset/')
-    print(entries, name)
-    if name in entries:
-        n += 1
-        checkFileName(n)
-        print('0')
-    else :
-        # name = f'asset/{name}'
-        print(name)
-        return name
+    # print(entries, name)
+    # if name in entries:
+    #     n += 1
+    #     checkFileName(n)
+    #     print('0')
+    # else :
+    #     # name = f'asset/{name}'
+    #     print(name)
+    #     return name
     
-    # for i in entries:
-    #     name = f'asset/img{n}.jpg'
-    #     if name in entries:
-    #         n += 1
-    #         print('ok')
-    #     else:
-    #         print(name)
-    #         return name
+    for i in entries:
+        name = f'img{n}.jpg'
+        if name in entries:
+            n += 1
+            print('ok')
+        else:
+            print(name)
+            return 'asset/'+name
 
 cap = cv2.VideoCapture(0)
 
