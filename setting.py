@@ -38,6 +38,16 @@ def ActionDoor(value):
         GPIO.cleanup()
         return 'close'
 
+@app.route('/levelSecurity/<string:value>')
+def SetLevelSecurity(value):
+    # f = open("./LevelSecurity.txt", "r")
+    # print(f.read())
+    
+    f = open("./LevelSecurity.txt", "w")
+    f.write(value)
+    f.close()
+    return ("<h1>200</h1>")
+
 if __name__== '__main__':
     app.debug = True
     app.run(host='0.0.0.0', port=8000)
