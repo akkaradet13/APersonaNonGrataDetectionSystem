@@ -5,17 +5,17 @@ from playsound import playsound
 
 app = Flask(__name__)
 
-def relay():
+def relay(gpioControl):
     channel = 21
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(channel, GPIO.OUT)
 
-    GPIO.output(channel, GPIO.HIGH)
+    GPIO.output(channel, GPIO.gpioControl)
     '''time.sleep(1)
     GPIO.output(channel, GPIO.LOW)'''
     playSound('preview.mp3')
     #time.sleep(3)
-    #GPIO.cleanup()
+    GPIO.cleanup()
 
 def playSound(file):
     os.system("mpg123 " + file)
@@ -27,15 +27,11 @@ def Home():
 @app.route('/actionDoor/<string:value>')
 def ActionDoor(value):
     if value == '0':
-        relay()
+        relay(HIGH)
         #playSound('preview.mp3')
         return 'open'
     elif value == '1':
-        channel = 21
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setup(channel, GPIO.OUT)
-        GPIO.output(channel, GPIO.LOW)
-        GPIO.cleanup()
+        relay(LOW)
         return 'close'
 
 @app.route('/levelSecurity/<string:value>')
@@ -47,6 +43,14 @@ def SetLevelSecurity(value):
     f.write(value)
     f.close()
     return ("<h1>200</h1>")
+
+@app.route('/getValue/<string:value>')
+def GetValue(fileName):
+    f = open(f'./{fileName}.txt', "r")
+    value = f.read()
+    f.close()
+    return value
+    
 
 if __name__== '__main__':
     app.debug = True
