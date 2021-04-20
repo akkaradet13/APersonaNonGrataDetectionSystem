@@ -3,11 +3,21 @@ import time
 import cv2
 import numpy as np
 from skin_seg import *
-from FrontOrganDetect import *
+from FaceOrganDetect import *
 import os
+import datetime
 
 #! Face Detect
 class Face_Detector():
+    scale_factor = 3
+    #     >   w , h
+    # size1 = (140,110)
+    #     <   w , h
+    # size2 = (260,420)
+
+    size1 = (50,50)
+    size2 = (400,400)
+    
     def __init__(self,skin_detect,organ_detect):
         self._skin_detect = skin_detect
         self._organ_detect = organ_detect
@@ -17,22 +27,29 @@ class Face_Detector():
     def Detect_Face_Img(self,img,size1,size2):
         skin_img = self._skin_detect.RGB_H_CbCr(img,False)
         contours, hierarchy = cv2.findContours(skin_img, cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
-        # cv2	.drawContours(img, contours, -1, (0,255,0), 1)
+        # cv2.drawContours(img, contours, -1, (0,255,0), 1)
         # print(f'contours {contours}')
         # cv2.imshow("faces",img)
         # if cv2.waitKey(0) & 0xFF == ord("q"):
         # 	sys.exit(0)
+        # print('contours',contours)
+        # 
+        print('shape',img.shape)
         rects = []
         for c in contours:
             x, y, w, h = cv2.boundingRect(c)
+            # print(f'????{x} {y} {w} {h}')
+            # multiplier = 1/self.scale_factor
+            # if (w*multiplier > size1[0] and h*multiplier > size1[1]) and (w*multiplier < size2[0] and h*multiplier < size2[1]):
             if (w > size1[0] and h > size1[1]) and (w < size2[0] and h < size2[1]):
                 Distance1 = 11.5*(img.shape[1]/float(w))
                 Distance2 = 15.0*((img.shape[1] + 226.8)/float(w))
                 print("\npinhole distance = {:.2f} cm\ncamera distance = {:.2f} cm".format(Distance1,Distance2))
                 print("Width = {} \t Height = {}".format(w,h))
-                rects.append(np.asarray([x,y,w,w*1.25], dtype=np.uint16))
+                if Distance1 < 50 and Distance2 < 90:
+                    rects.append(np.asarray([x,y,w,w*1.25], dtype=np.uint16))
         return rects
-    def Detect_Face_Vid(self,vid,size1,size2,scale_factor = 3):	
+    def Detect_Face_Vid(self,vid):	
         n = 0
         frameCounter = 0
         alpha = 0.2
@@ -41,19 +58,21 @@ class Face_Detector():
         while True:
             start =time.time()
             (grabbed, img) = vid.read()
+            img = cv2.flip(img, 1)
             if not grabbed:
                 break
             fps = vid.get(cv2.CAP_PROP_FPS)
             
             # print("\nRecording at {} frame/sec".format(fps))
-            Image = cv2.resize(img, (0, 0), fx=1/scale_factor, fy=1/scale_factor)
-            
+            # Image = cv2.resize(img, (0, 0), fx=1/self.scale_factor, fy=1/self.scale_factor)
+            Image = img
             
             if frameCounter % 10 == 0:
                 print('-------------------detec-----------------------')  
-                rects = self.Detect_Face_Img(Image,size1,size2)
+                rects = self.Detect_Face_Img(Image,self.size1,self.size2)
                 face_crop = None
-                final_face = None
+                organCheck = None
+                textDraw = '...'
                 print(f'len rects = {len(rects)} -> fps{fps}')
                 if len(rects) == 0 :
                      rects2 = None
@@ -62,59 +81,101 @@ class Face_Detector():
                         overlay = img.copy()
                         
                         x0,y0,w,h = r
-                        x0 *= scale_factor
-                        y0 *= scale_factor
-                        w *= scale_factor
-                        h *= scale_factor
+                        # x0 *= self.scale_factor
+                        # y0 *= self.scale_factor
+                        # w *= self.scale_factor
+                        # h *= self.scale_factor
                         face_crop = img[y0:y0+h, x0:x0+w]
                         # font = cv2.FONT_HERSHEY_SIMPLEX
-                        eyeCheck = self._organ_detect.detect(face_crop, 'eye')
-                        print(eyeCheck)
-                        if len(eyeCheck['Eyes']) > 0 :
+                        organCheck = self._organ_detect.detect(face_crop)
+                        print(organCheck)
+                        f = open("./LevelSecurity.txt", "r").read()
+                        print('LevelSecurity => ',f)
+                        
+                        if organCheck['Eyes'] is not None or organCheck['Nose'] is not None or organCheck['Mouth'] is not None:
                             rects2 = rects
                             cv2.rectangle(overlay, (x0,y0), (x0+w, y0+h), (0,0,255), 2)
                             
-                            final_face = self._organ_detect.detect(face_crop)
-                            for item in final_face:
-                                if len(final_face[item]) > 0:
-                                    xod,yod,wod,hod = final_face[item]
+                            # final_face = self._organ_detect.detect(face_crop)
+                            checkList = ''
+                            #! Draw
+                            for item in organCheck:
+                                if organCheck[item] is not None:
+                                    checkList += item[0]
+                                    xod,yod,wod,hod = organCheck[item][0]
                                     print(f'rr{xod,yod,wod,hod}')
                                     xx = xod+x0
                                     yy = yod+y0
-                                    cv2.rectangle(overlay, (xx, yy), (xx+wod, yy+hod), (0, 0, 255), 1)
-                                    cv2.putText(overlay, str(item), (xx, yy-4), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255,0,0), 1, cv2.LINE_AA)
-                                    
+                                    if item == 'Eyes':
+                                        for position in organCheck[item]:
+                                            xod,yod,wod,hod = position
+                                            print('eyePosition', xod,yod,wod,hod)
+                                            cv2.rectangle(overlay, (xx, yy), (xx+wod, yy+hod), (0, 0, 255), 1)
+                                            cv2.putText(overlay, str(item), (xx, yy-4), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255,0,0), 1, cv2.LINE_AA)
+                                    else :
+                                        cv2.rectangle(overlay, (xx, yy), (xx+wod, yy+hod), (0, 0, 255), 1)
+                                        cv2.putText(overlay, str(item), (xx, yy-4), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255,0,0), 1, cv2.LINE_AA)
+                                    checkList += item[0]
+                           
+                            
+                            if len(checkList) >= int(f):
+                                textDraw = 'Pass'
+                                self.draw(overlay,'Pass')
+                                cv2.imwrite(self.checkFileName(checkList,f'TestDetect/{str(f)}/True'), face_crop)
+                            else:
+                                textDraw = 'Not Pass'
+                                self.draw(overlay,'Not Pass')
+                                cv2.imwrite(self.checkFileName(checkList,f'TestDetect/{str(f)}/False'), face_crop)
+
+                            print('checkList',checkList)
                             cv2.addWeighted(overlay, alpha, img, 1-alpha,0, img)
+                            print(f'skin และ อวัยวะ {checkList} {len(checkList)}')
+                        else:
+                            print('skin แต่ ไม่เจออวัยวะ')
+                            cv2.imwrite(self.checkFileName('none',f'TestDetect/{str(f)}/Skin'), face_crop)
             else:
-                print('-------------------else-------------------', rects2)
+                print('-------------------else-------------------\n')
+                #! Draw
+                
                 if rects2 is not None:
                     for i,r in enumerate(rects2):
                         overlay = img.copy()
                         
                         x0,y0,w,h = r
-                        x0 *= scale_factor
-                        y0 *= scale_factor
-                        w *= scale_factor
-                        h *= scale_factor
+                        # x0 *= self.scale_factor
+                        # y0 *= self.scale_factor
+                        # w *= self.scale_factor
+                        # h *= self.scale_factor
                         face_crop = img[y0:y0+h, x0:x0+w]
                         # font = cv2.FONT_HERSHEY_SIMPLEX
                         cv2.rectangle(overlay, (x0,y0), (x0+w, y0+h), (0,0,255),2)
-                        print('final face',final_face)
-                        if final_face is not None:
-                            for item in final_face:
-                                if len(final_face[item]) > 0:
-                                    xod,yod,wod,hod = final_face[item]
+                        print('final face',organCheck)
+                        self.draw(overlay,textDraw)
+                        cv2.addWeighted(overlay, alpha, img, 1-alpha,0, img)
+                        
+                        if organCheck is not None:
+                            for item in organCheck:
+                                if organCheck[item] is not None:
+                                    xod,yod,wod,hod = organCheck[item][0]
                                     print(f'rr{xod,yod,wod,hod}')
                                     xx = xod+x0
                                     yy = yod+y0
-                                    cv2.rectangle(overlay, (xx, yy), (xx+wod, yy+hod), (0, 0, 255), 1)
-                                    cv2.putText(overlay, str(item), (xx, yy-4), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255,0,0), 1, cv2.LINE_AA)
-                        cv2.addWeighted(overlay, alpha, img, 1-alpha,0, img)
+                                    if item == 'Eyes':
+                                        for position in organCheck[item]:
+                                            xod,yod,wod,hod = position
+                                            print('eyePosition', position)
+                                            cv2.rectangle(overlay, (xx, yy), (xx+wod, yy+hod), (0, 0, 255), 1)
+                                            cv2.putText(overlay, str(item), (xx, yy-4), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255,0,0), 1, cv2.LINE_AA)
+                                    else :
+                                        cv2.rectangle(overlay, (xx, yy), (xx+wod, yy+hod), (0, 0, 255), 1)
+                                        cv2.putText(overlay, str(item), (xx, yy-4), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255,0,0), 1, cv2.LINE_AA)
+                
                 
             cv2.imshow('img', img)
             # print(f'frameCounter => {frameCounter}')
             if frameCounter > 30 : frameCounter = 0
             frameCounter += 1
+            n += 1
             
             stop = time.time()
             frameRate = abs((1/fps - (stop - start)))
@@ -124,10 +185,18 @@ class Face_Detector():
             if cv2.waitKey(1) & 0xFF == ord("q"):
                 break
         vid.release()
+        
+    def draw(self, overlay, text):
+        cv2.putText(overlay, text, (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0,0,255), 5, cv2.LINE_AA)
 
-def checkFileName():
-    entries = os.listdir('./face')
-    return f'img{str(len(entries)+1)}.jpg'
+
+    def checkFileName(self, checkList, path):
+        # entries = os.listdir('./face')
+        #'2012-09-04 06:00:00.000000'
+        x = datetime.datetime.now()
+        x = str(x.strftime("%Y-%m-%d+%H:%M:%S_%f"))
+        # return f'img{str(len(entries)+1)}.jpg'
+        return f'{path}/{x}={checkList}=.jpg'
 
 #! Main
 def Arg_Parser():
@@ -156,25 +225,35 @@ if __name__ == "__main__":
         sys.exit(0)
     in_arg = Arg_Parser()
     skin_detect = Skin_Detect()
-    frontOrganDetect = FrontOrganDetect()
+    faceOrganDetect = FaceOrganDetect()
     
     #? ต่ำสุด(กว้าง, สูง)
     #? สูงสุด(กว้าง, สูง)
     
-    #! 1.5 M
-    # size1 = (20,20)
-    # size2 = (150,150)
+    #! 50 CM
+    # size1 = (50,50)
+    # size2 = (200,200)
     
-    #! default
-    size1 = (50,50)
-    size2 = (400,400)
+    #! 100 CM ยังไม่ได้
+    # size1 = (10,10)
+    # size2 = (50,50)
+    
+    
+    
+    #! default w163 h243
+    #! size1 w h มากกว่า size2  w h น้อยกว่า
+    # size1 = (50,50)
+    # size2 = (400,400)
     
     #! ที่ทำงาน
-    # size1 = (60,60)
-    # size2 = (80,80)
+    # size1 = (142,192)
+    # size2 = (256,416)
+
+    size1 = (50,50)
+    size2 = (256,416)
     
-    scale_factor = 3
-    Face_Detect = Face_Detector(skin_detect, frontOrganDetect)
+    # scale_factor = 3
+    Face_Detect = Face_Detector(skin_detect, faceOrganDetect)
     if in_arg["image"] != None:
         img = open_img(in_arg)
         rects = Face_Detect.Detect_Face_Img(img,size1,size2)
@@ -185,7 +264,7 @@ if __name__ == "__main__":
             x,y,w,h = r
             face = cv2.rectangle(img, (x, y), (x+w, y+h), (0, 255, 0), 1)
             face_crop = img[y:y+h, x:x+w]
-            final_face = frontOrganDetect.detect(face_crop)
+            final_face = faceOrganDetect.detect(face_crop)
             for item in final_face:
                 if len(final_face[item]) > 0:
                     x0,y0,w0,h0 = final_face[item]
@@ -193,7 +272,7 @@ if __name__ == "__main__":
                     xx = x+x0
                     yy = y+y0
                     cv2.rectangle(img, (xx, yy), (xx+w0, yy+h0), (0, 0, 255), 1)
-            print(f'frontOrganDetect {n} ==> {final_face} \n')
+            print(f'faceOrganDetect {n} ==> {final_face} \n')
             n += 1
             # try:
             #     cv2.imwrite('face/'+checkFileName(), final_face)
@@ -208,5 +287,5 @@ if __name__ == "__main__":
         Face_Detect.Detect_Face_Vid(vid,size1,size2,scale_factor)
     if in_arg["camera"] != None:
         cam = open_camera(int(in_arg["camera"]))
-        Face_Detect.Detect_Face_Vid(cam,size1,size2,scale_factor)
+        Face_Detect.Detect_Face_Vid(cam)
 

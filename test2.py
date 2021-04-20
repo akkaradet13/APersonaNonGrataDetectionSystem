@@ -9,6 +9,7 @@ Nose_detector = cv2.CascadeClassifier('./xml/haarcascade_mcs_nose.xml')
 alpha = 0.2
 n = 0
 faces = None
+print(type(eye_detector))
 while True :
     _, frame = cap.read()
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)

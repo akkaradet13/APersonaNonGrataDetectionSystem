@@ -15,9 +15,6 @@ import matplotlib.pyplot as plt
 
 
 class Skin_Detect():
-	def __init__(self):
-	#Constractor that does nothing
-		pass
 	#RGB bounding rule
 	def Rule_A(self,BGR_Frame,plot=False):
 		'''this function implements the RGB bounding rule algorithm
@@ -265,7 +262,7 @@ if __name__ == "__main__":
 	HSV_Frames = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 	# test.Rule_A(img,True)
 	# test.Rule_B(YCrCb_Frames,True)
-	# test.Rule_C(HSV_Frames,True)
+	test.Rule_C(HSV_Frames,True)
 	test.RGB_H_CbCr(img,True)
 	plt.show()
 	cv2.waitKey(0)
