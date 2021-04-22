@@ -4,23 +4,27 @@ import cv2
 import numpy as np
 from skin_seg import *
 from FaceOrganDetect import *
+from PushData import *
 import os
 import datetime
 
 #! Face Detect
 class Face_Detector():
     scale_factor = 3
+    #! พื้นหลังขาว
     #     >   w , h
-    # size1 = (140,110)
+    size1 = (130,100)
     #     <   w , h
-    # size2 = (260,420)
-
-    size1 = (50,50)
-    size2 = (400,400)
+    size2 = (260,420)
     
-    def __init__(self,skin_detect,organ_detect):
+    #! ทั่วไป
+    #size1 = (50,50)
+    #size2 = (400,400)
+    
+    def __init__(self,skin_detect,organ_detect,push_data):
         self._skin_detect = skin_detect
         self._organ_detect = organ_detect
+        self._push_data = push_data
     @property
     def skin_detect(self):
         return self._skin_detect
@@ -78,25 +82,19 @@ class Face_Detector():
                      rects2 = None
                 else:
                     for i,r in enumerate(rects):
-                        overlay = img.copy()
-                        
+                        overlay = img.copy()            
                         x0,y0,w,h = r
-                        # x0 *= self.scale_factor
-                        # y0 *= self.scale_factor
-                        # w *= self.scale_factor
-                        # h *= self.scale_factor
                         face_crop = img[y0:y0+h, x0:x0+w]
                         # font = cv2.FONT_HERSHEY_SIMPLEX
+                        LevelSecurity = open("./LevelSecurity.txt", "r").read()
+                        print('LevelSecurity => ',LevelSecurity)
+                        
                         organCheck = self._organ_detect.detect(face_crop)
                         print(organCheck)
-                        f = open("./LevelSecurity.txt", "r").read()
-                        print('LevelSecurity => ',f)
-                        
                         if organCheck['Eyes'] is not None or organCheck['Nose'] is not None or organCheck['Mouth'] is not None:
                             rects2 = rects
                             cv2.rectangle(overlay, (x0,y0), (x0+w, y0+h), (0,0,255), 2)
                             
-                            # final_face = self._organ_detect.detect(face_crop)
                             checkList = ''
                             #! Draw
                             for item in organCheck:
@@ -115,24 +113,37 @@ class Face_Detector():
                                     else :
                                         cv2.rectangle(overlay, (xx, yy), (xx+wod, yy+hod), (0, 0, 255), 1)
                                         cv2.putText(overlay, str(item), (xx, yy-4), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255,0,0), 1, cv2.LINE_AA)
-                                    checkList += item[0]
+                                    
+                                    # final_face = faceOrganDetect.detect(face_crop)
+                                    # for item in final_face:
+                                    #     if len(final_face[item]) > 0:
+                                    #         x0,y0,w0,h0 = final_face[item]
+                                    #         print(f'rr{x0,y0,w0,h0}')
+                                    #         xx = x+x0
+                                    #         yy = y+y0
+                                    #         cv2.rectangle(img, (xx, yy), (xx+w0, yy+h0), (0, 0, 255), 1)
                            
-                            
-                            if len(checkList) >= int(f):
+                            fileName = ''
+                            if len(checkList) >= int(LevelSecurity):
                                 textDraw = 'Pass'
                                 self.draw(overlay,'Pass')
-                                cv2.imwrite(self.checkFileName(checkList,f'TestDetect/{str(f)}/True'), face_crop)
+                                cv2.imwrite(self.checkFileName(checkList,f'TestDetect/{str(LevelSecurity)}/Pass'), face_crop)
+                                fileName = self.checkFileName(checkList,f'Data')
+                                cv2.imwrite(fileName, face_crop)
                             else:
                                 textDraw = 'Not Pass'
                                 self.draw(overlay,'Not Pass')
-                                cv2.imwrite(self.checkFileName(checkList,f'TestDetect/{str(f)}/False'), face_crop)
+                                cv2.imwrite(self.checkFileName(checkList,f'TestDetect/{str(LevelSecurity)}/NotPass'), face_crop)
+                                cv2.imwrite(self.checkFileName(checkList,f'Data'), face_crop)
+                            self._push_data.pushData(fileName)
 
                             print('checkList',checkList)
                             cv2.addWeighted(overlay, alpha, img, 1-alpha,0, img)
                             print(f'skin และ อวัยวะ {checkList} {len(checkList)}')
                         else:
                             print('skin แต่ ไม่เจออวัยวะ')
-                            cv2.imwrite(self.checkFileName('none',f'TestDetect/{str(f)}/Skin'), face_crop)
+                            cv2.imwrite(self.checkFileName('none',f'TestDetect/{str(LevelSecurity)}/OnlySkin'), face_crop)
+                            #cv2.imwrite(self.checkFileName('none',f'Data'), face_crop)
             else:
                 print('-------------------else-------------------\n')
                 #! Draw
@@ -151,7 +162,6 @@ class Face_Detector():
                         cv2.rectangle(overlay, (x0,y0), (x0+w, y0+h), (0,0,255),2)
                         print('final face',organCheck)
                         self.draw(overlay,textDraw)
-                        cv2.addWeighted(overlay, alpha, img, 1-alpha,0, img)
                         
                         if organCheck is not None:
                             for item in organCheck:
@@ -169,6 +179,7 @@ class Face_Detector():
                                     else :
                                         cv2.rectangle(overlay, (xx, yy), (xx+wod, yy+hod), (0, 0, 255), 1)
                                         cv2.putText(overlay, str(item), (xx, yy-4), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255,0,0), 1, cv2.LINE_AA)
+                        cv2.addWeighted(overlay, alpha, img, 1-alpha,0, img)
                 
                 
             cv2.imshow('img', img)
@@ -176,7 +187,7 @@ class Face_Detector():
             if frameCounter > 30 : frameCounter = 0
             frameCounter += 1
             n += 1
-            
+
             stop = time.time()
             frameRate = abs((1/fps - (stop - start)))
             # print(f'fram {frameRate}')
@@ -226,65 +237,9 @@ if __name__ == "__main__":
     in_arg = Arg_Parser()
     skin_detect = Skin_Detect()
     faceOrganDetect = FaceOrganDetect()
+    pushData = PushData()
     
-    #? ต่ำสุด(กว้าง, สูง)
-    #? สูงสุด(กว้าง, สูง)
-    
-    #! 50 CM
-    # size1 = (50,50)
-    # size2 = (200,200)
-    
-    #! 100 CM ยังไม่ได้
-    # size1 = (10,10)
-    # size2 = (50,50)
-    
-    
-    
-    #! default w163 h243
-    #! size1 w h มากกว่า size2  w h น้อยกว่า
-    # size1 = (50,50)
-    # size2 = (400,400)
-    
-    #! ที่ทำงาน
-    # size1 = (142,192)
-    # size2 = (256,416)
-
-    size1 = (50,50)
-    size2 = (256,416)
-    
-    # scale_factor = 3
-    Face_Detect = Face_Detector(skin_detect, faceOrganDetect)
-    if in_arg["image"] != None:
-        img = open_img(in_arg)
-        rects = Face_Detect.Detect_Face_Img(img,size1,size2)
-        print('rects',rects)
-        n = 1
-        face_crop = None
-        for i,r in enumerate(rects):
-            x,y,w,h = r
-            face = cv2.rectangle(img, (x, y), (x+w, y+h), (0, 255, 0), 1)
-            face_crop = img[y:y+h, x:x+w]
-            final_face = faceOrganDetect.detect(face_crop)
-            for item in final_face:
-                if len(final_face[item]) > 0:
-                    x0,y0,w0,h0 = final_face[item]
-                    print(f'rr{x0,y0,w0,h0}')
-                    xx = x+x0
-                    yy = y+y0
-                    cv2.rectangle(img, (xx, yy), (xx+w0, yy+h0), (0, 0, 255), 1)
-            print(f'faceOrganDetect {n} ==> {final_face} \n')
-            n += 1
-            # try:
-            #     cv2.imwrite('face/'+checkFileName(), final_face)
-            #     print(f'{n}detect')
-            # except:
-            #     print('0')
-        cv2.imshow('img',img)
-        if cv2.waitKey(0) & 0xFF == ord("q"):
-            sys.exit(0)
-    if in_arg["video"] != None:
-        vid = open_vid(in_arg)
-        Face_Detect.Detect_Face_Vid(vid,size1,size2,scale_factor)
+    Face_Detect = Face_Detector(skin_detect, faceOrganDetect, pushData)
     if in_arg["camera"] != None:
         cam = open_camera(int(in_arg["camera"]))
         Face_Detect.Detect_Face_Vid(cam)
